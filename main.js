@@ -14,6 +14,7 @@ const pageThreeButton = document.getElementById("button-3");
 const pageFourButton = document.getElementById("button-4");
 const pageFiveButton = document.getElementById("button-5");
 
+const buttonContainer = document.getElementById("button-container");
 const startTobaccoButton = document.getElementById("start-tobacco-button");
 const stopTobaccoButton = document.getElementById("stop-tobacco-button");
 const startMolassesButton = document.getElementById("start-molasses-button");
@@ -21,9 +22,14 @@ const stopMolassesButton = document.getElementById("stop-molasses-button");
 const startFermentingShishaButton = document.getElementById("start-fermenting-shisha");
 const stopFermentingShishaButton = document.getElementById("stop-fermenting-shisha");
 
+const containerInventory = document.getElementById("inventory-container");
 const tobaccoInventory = document.getElementById("tobacco-inventory");
 const molassesInventory = document.getElementById("molasses-inventory");
 const shishaInventory = document.getElementById("shisha-inventory");
+const heatSourceContainer = document.getElementById("heat-source-container");
+const hookahContainer = document.getElementById("hookah-container");
+
+const LungContainer = document.getElementById("lung-container");
 
 const activeWorkersMolasses = document.getElementById("active-workers-molasses");
 const activeWorkersShisha = document.getElementById("active-workers-shisha");
@@ -32,8 +38,16 @@ const tobaccoProgress = document.getElementById("tobacco-progress-bar");
 const molassesProgress = document.getElementById("molasses-progress-bar");
 const shishaProgress = document.getElementById("shisha-progress-bar");
 
+const getThatSmokeButton = document.getElementById("get-that-smoke-button");
+const getThatSmokeProgress = document.getElementById("smoke-progress-bar");
 
 let inventoryTotals = {
+    tobacco: 0,
+    molasses: 0,
+    shisha: 0
+}
+
+let inventoryCurrent = {
     tobacco: 0,
     molasses: 0,
     shisha: 0
@@ -51,9 +65,14 @@ let workers = {
     shishaSpeed: 2000
 }
 
+let lungs = {
+    power: 0
+}
+
 let tobaccoProgressBar = 0;
 let molassesProgressBar = 0;
 let shishaProgressBar = 0;
+let smokeProgressBar = 0;
 
 let tobaccoTimeoutID;
 let molassesTimeoutID;
@@ -62,6 +81,7 @@ let shishaTimeoutID;
 let tobaccoProgressBarTimeoutID;
 let molassesProgressBarTimeoutID;
 let shishaProgressBarTimeoutID;
+let smokeProgressBarTimeoutID;
 
 /* 
 ----------------------- Functions -----------------------
@@ -72,12 +92,23 @@ let shishaProgressBarTimeoutID;
 function init() {
     pageOneHeader.style.display = "block";
     pageTwoHeader.style.display = "none";
+    pageTwoButton.style.backgroundColor = "grey";
+    pageTwoButton.disabled = true;
+    pageThreeButton.style.backgroundColor = "grey";
+    pageThreeButton.disabled = true;
+    pageFourButton.style.backgroundColor = "grey";
+    pageFourButton.disabled = true;
+    pageFiveButton.style.backgroundColor = "grey";
+    pageFiveButton.disabled = true;
     pageThreeHeader.style.display = "none";
     pageFourHeader.style.display = "none";
     pageFiveHeader.style.display = "none";
-    tobaccoInventory.innerHTML = "Tobacco: " + inventoryTotals.tobacco;
-    molassesInventory.innerHTML = "Molasses: " + inventoryTotals.molasses;
-    shishaInventory.innerHTML = "Shisha: " + inventoryTotals.shisha;
+    tobaccoInventory.innerHTML = "Tobacco: " + inventoryCurrent.tobacco;
+    molassesInventory.innerHTML = "Molasses: " + inventoryCurrent.molasses;
+    shishaInventory.innerHTML = "Shisha: " + inventoryCurrent.shisha;
+    heatSourceContainer.style.display = "none";
+    hookahContainer.style.display = "none";
+    LungContainer.style.display = "none";
     stopTobaccoButton.disabled = true;
     stopTobaccoButton.style.backgroundColor = "grey";
     stopMolassesButton.disabled = true;
@@ -145,18 +176,16 @@ function showPageFive() {
 // Update Inventory Functions
 
 function updateTobaccoInventory() {
-    tobaccoInventory.innerHTML = "Tobacco: " + inventoryTotals.tobacco;
+    tobaccoInventory.innerHTML = "Tobacco: " + inventoryCurrent.tobacco;
 }
 
 function updateMolassesInventory() {
-    molassesInventory.innerHTML = "Molasses: " + inventoryTotals.molasses;
+    molassesInventory.innerHTML = "Molasses: " + inventoryCurrent.molasses;
 }
 
 function updateShishaInventory() {
-    shishaInventory.innerHTML = "Shisha: " + inventoryTotals.shisha;
+    shishaInventory.innerHTML = "Shisha: " + inventoryCurrent.shisha;
 }
-
-// Game Mechanics Functions
 
 // Tobacco Functions
 
@@ -180,6 +209,7 @@ function checkTobaccoActiveWorkers() {
 
 function tobaccoFarm() {
     if (workers.activeTobacco === true) {
+        inventoryCurrent.tobacco += workers.tobaccoGain;
         inventoryTotals.tobacco += workers.tobaccoGain;
         updateTobaccoInventory();
         tobaccoProgressBarMove();
@@ -195,7 +225,7 @@ function stopTobaccoFarm() {
     startMolassesButton.style.backgroundColor = "black";
     stopTobaccoButton.disabled = true;
     stopTobaccoButton.style.backgroundColor = "grey";
-    if (inventoryTotals.molasses >= 1 && inventoryTotals.tobacco >= 1) {
+    if (inventoryCurrent.molasses >= 1 && inventoryCurrent.tobacco >= 1) {
         startFermentingShishaButton.disabled = false;
         startFermentingShishaButton.style.backgroundColor = "black";
     }
@@ -244,6 +274,7 @@ function checkMolassesActiveWorkers() {
 
 function molassesFarm() {
     if (workers.activeMolasses === true) {
+        inventoryCurrent.molasses += workers.molassesGain;
         inventoryTotals.molasses += workers.molassesGain;
         updateMolassesInventory();
         molassesProgressBarMove();
@@ -259,7 +290,7 @@ function stopMolassesFarm() {
     startMolassesButton.style.backgroundColor = "black";
     stopMolassesButton.disabled = true;
     stopMolassesButton.style.backgroundColor = "grey";
-    if (inventoryTotals.molasses >= 1 && inventoryTotals.tobacco >= 1) {
+    if (inventoryCurrent.molasses >= 1 && inventoryCurrent.tobacco >= 1) {
         startFermentingShishaButton.disabled = false;
         startFermentingShishaButton.style.backgroundColor = "black";
     }
@@ -286,8 +317,21 @@ function molassesProgressBarMove() {
     }
 }
 
+// Shisha Functions
+
+function unlockSmoke() {
+    if (inventoryTotals.shisha >= 10) {
+        pageTwoButton.style.backgroundColor = "black";
+        pageTwoButton.disabled = false;
+        pageTwoButton.innerHTML = "Smoke";
+        heatSourceContainer.style.display = "block";
+        hookahContainer.style.display = "block";
+        LungContainer.style.display = "block";
+    }
+}
+
 function fermentShisha() {
-    if (inventoryTotals.molasses >= 1 && inventoryTotals.tobacco >= 1) {
+    if (inventoryCurrent.molasses >= 1 && inventoryCurrent.tobacco >= 1) {
         workers.activeShisha = true;
         stopFermentingShishaButton.disabled = false;
         stopFermentingShishaButton.style.backgroundColor = "black";
@@ -297,12 +341,14 @@ function fermentShisha() {
         startMolassesButton.style.backgroundColor = "grey";
         shishaProgressBarMove();
         shishaTimeoutID = setTimeout(() => { 
+            inventoryCurrent.shisha += workers.shishaGain,
             inventoryTotals.shisha += workers.shishaGain,
             updateShishaInventory(),
-            inventoryTotals.tobacco--,
+            inventoryCurrent.tobacco--,
             updateTobaccoInventory(),
-            inventoryTotals.molasses--,
+            inventoryCurrent.molasses--,
             updateMolassesInventory(),
+            unlockSmoke(),
             fermentShisha()
         }, workers.shishaSpeed);
     } else {
@@ -323,7 +369,7 @@ function fermentShisha() {
 }
 
 function stopShishaFarm() {
-    if (inventoryTotals.molasses >= 1 && inventoryTotals.tobacco >= 1) {
+    if (inventoryCurrent.molasses >= 1 && inventoryCurrent.tobacco >= 1) {
         startFermentingShishaButton.disabled = false;
         startFermentingShishaButton.style.backgroundColor = "black";
     }
@@ -358,14 +404,31 @@ function shishaProgressBarMove() {
 }
 
 /* 
------------------------ Buttons Onclick -----------------------
+----------------------- Page 2 Smoke -----------------------
 */
 
-pageOneButton.onclick = showPageOne;
-pageTwoButton.onclick = showPageTwo;
-pageThreeButton.onclick = showPageThree;
-pageFourButton.onclick = showPageFour;
-pageFiveButton.onclick = showPageFive;
+function getThatSmoke() {
+    if(inventoryCurrent.shisha >= 1) {
+        smokeProgressBarMove();
+    }
+}
+
+function smokeProgressBarMove() {
+    if (smokeProgressBar == 0) {
+        smokeProgressBar = 1;
+        var width = 1;
+        smokeProgressBarTimeoutID = setInterval(frame, 50);
+        function frame() {
+            if (width >= 100) {
+                clearInterval(smokeProgressBarTimeoutID);
+                smokeProgressBar = 0;
+            } else {
+                width++;
+                getThatSmokeProgress.style.width = width + "%";
+            }
+        }
+    }
+}
 
 startTobaccoButton.onclick = checkTobaccoActiveWorkers;
 stopTobaccoButton.onclick = stopTobaccoFarm;
@@ -373,6 +436,13 @@ stopTobaccoButton.onclick = stopTobaccoFarm;
 startMolassesButton.onclick = checkMolassesActiveWorkers;
 stopMolassesButton.onclick = stopMolassesFarm;
 
-// startFermentingShishaButton.onclick = checkShisha;
 startFermentingShishaButton.onclick = fermentShisha;
 stopFermentingShishaButton.onclick = stopShishaFarm;
+
+pageOneButton.onclick = showPageOne;
+pageTwoButton.onclick = showPageTwo;
+// pageThreeButton.onclick = showPageThree;
+// pageFourButton.onclick = showPageFour;
+// pageFiveButton.onclick = showPageFive;
+
+getThatSmokeButton.onclick = getThatSmoke;
