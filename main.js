@@ -66,7 +66,7 @@ let workers = {
 }
 
 let lungs = {
-    power: 1
+    power: 0
 }
 
 let tobaccoProgressBar = 0;
